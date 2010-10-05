@@ -115,7 +115,7 @@ class PDFshuffler:
         vbox = gtk.VBox()
         self.window.add(vbox)
 
-        # Create a scrolled window to hold the thumbnails-container
+        # Create a scrolled widow to hold the thumnails-container
         self.sw = gtk.ScrolledWindow()
         self.sw.set_border_width(0)
         self.sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
@@ -275,13 +275,6 @@ class PDFshuffler:
             self.add_pdf_pages(filename)
 
     # =======================================================
-    def render(self):
-        if self.rendering_thread.paused:
-            self.rendering_thread.paused = False
-            self.rendering_thread.evnt.set()
-            self.rendering_thread.evnt.clear()
-
-    # =======================================================
     def on_window_size_request(self, window, event):
         """Main Window resize - workaround for autosetting of
            iconview cols no."""
@@ -378,8 +371,10 @@ class PDFshuffler:
                                crop[2],crop[3]       )) # 10-11
             res = True
 
-        if res:
-            self.render()
+        if res and self.rendering_thread.paused:
+            self.rendering_thread.paused = False
+            self.rendering_thread.evnt.set()
+            self.rendering_thread.evnt.clear()
         return res
 
     # =======================================================
@@ -805,7 +800,10 @@ class PDFshuffler:
             model.set_value(iter, 7, new_angle)
             model.set_value(iter, 6, False) #rendering request
 
-        self.render()
+        if self.rendering_thread.paused:
+            self.rendering_thread.paused = False
+            self.rendering_thread.evnt.set()
+            self.rendering_thread.evnt.clear()
 
     # =======================================================
     def crop_page_dialog(self, widget):
@@ -866,7 +864,10 @@ class PDFshuffler:
                 for it in range(4):
                     model.set_value(iter, 8 + it, crop[it])
                 model.set_value(iter, 6, False) #rendering request
-            self.render()
+            if self.rendering_thread.paused:
+                self.rendering_thread.paused = False
+                self.rendering_thread.evnt.set()
+                self.rendering_thread.evnt.clear()
         elif result == gtk.RESPONSE_CANCEL:
             print(_('Dialog closed'))
         dialog.destroy()
